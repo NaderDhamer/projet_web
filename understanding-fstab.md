@@ -2,13 +2,13 @@
 
 **Duration:** 75 minutes · [Beginner track](README.md) · [Commands](../commands.md)
 
-## 1. What is fstab?
+## Overview?
 
 The /etc/fstab file (filesystem table) is a system configuration file that defines how filesystems, partitions, and storage devices are mounted at boot time. The system reads this file during startup and mounts each entry automatically.
 
 Understanding /etc/fstab is essential when you need to add a new disk, create a swap file, mount a network share, or change mount options for an existing filesystem.
 
-## 2. Anatomy of a line
+## 1. Anatomy of a line
 
 Every active line has six fields separated by spaces or tabs:
 
@@ -26,7 +26,7 @@ UUID=9d8c7b6a-1111-2222-3333-444455556666 /data xfs defaults,nofail 0 2
  ```
 Lines beginning with # are comments and are ignored. Blank lines are ignored too.
 
-## 3. The six fields explained
+## 2. The six fields explained
 
 ### Field 1: Device (the file system to mount)
 
@@ -61,7 +61,7 @@ Controls the order in which fsck checks filesystems at boot:
 - 2: other filesystems to be checked after root
 - 0: never checked (use for swap, network shares, and XFS/Btrfs, which do not use fsck at boot)
 
-## 4. Mount options in depth
+## 3. Mount options in depth
 
 ### General options
 
@@ -101,7 +101,7 @@ VFAT, NTFS and CIFS have no native Linux ownership, so you set it at mount time:
 
 umask=022,uid=1000,gid=1000
 
-## 5. Finding the information you need
+## 4. Finding the information you need
 
 Before writing any line, gather the facts.
  ```bash
@@ -121,9 +121,9 @@ sdb
  ```
 Here sdb1 has a filesystem but is not mounted, so it is a candidate for a new fstab entry.
 
-## 6. Step-by-step: adding a new disk
+## Practical Task
 
-Suppose you added a new disk /dev/sdb, and you want it mounted on /data.
+1.Suppose you added a new disk /dev/sdb, and you want it mounted on /data.
  ```bash
 **Step 1: Create a partition** (skip if it already has one)
 sudo parted /dev/sdb --script mklabel gpt mkpart primary 0% 100%
@@ -159,7 +159,7 @@ If mount -a returns no errors and df shows the disk, the entry is good.
 
 sudo chown -R youruser:youruser /data
  ```
-## 7. More examples
+2. More examples
 
 ### Swap file
  ```bash
@@ -202,7 +202,7 @@ UUID=aaaa-bbbb /srv/uploads ext4 defaults,noexec,nosuid,nodev 0 2
 
 /srv/data/projects /home/alice/projects none bind 0 0
  ```
-## 8. Troubleshooting
+ Troubleshooting
 
 | Symptom                                          | Likely cause                                                                | Fix                                                                                        |
 | ------------------------------------------------ | --------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------ |
