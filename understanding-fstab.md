@@ -229,8 +229,21 @@ cp /etc/fstab.bak /etc/fstab
  ```
 4. Test with mount -a, then reboot.
 If you cannot reach a shell at all, boot from a live USB, mount the root partition, and edit etc/fstab there.
+<details>
+<summary>Solutions and discussion</summary>
 
-## 9. Best practices
+findmnt --verify and mount -a only prove the entries are valid right now. They don't prove the system boots cleanly or that users can work in the directory. A production drill also checks:
+
+Reboot test: the mount returns on its own, and the system still boots if the disk is missing (nofail).
+Options applied: findmnt -o TARGET,SOURCE,FSTYPE,OPTIONS /data shows the expected ro, noexec, nosuid, nodev.
+Ownership and permissions: the right users can read and write, and the others cannot.
+Network mounts: NFS/SMB mount after the network is up (_netdev), the credentials file is chmod 600 and root-owned, and the system doesn't hang if the server is down.
+Recovery: the UUID, the fstab backup and the credentials are stored off this server, and you know how to fix a broken fstab from rescue mode.
+
+Record the change (date, device, UUID, mount point, options) and monitor disk usage and failed mounts (systemctl --failed, journalctl -b).
+
+</details>
+ Best practices
 
 - **Back up before every edit**, ideally with a dated filename.
 - **Prefer UUIDs** over /dev/sdX names.
