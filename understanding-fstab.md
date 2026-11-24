@@ -1,3 +1,7 @@
+# Session 7: Understanding fstab
+
+**Duration:** 75 minutes · [Beginner track](README.md) · [Commands](../commands.md)
+
 ## 1. What is fstab?
 
 The /etc/fstab file (filesystem table) is a system configuration file that defines how filesystems, partitions, and storage devices are mounted at boot time. The system reads this file during startup and mounts each entry automatically.
@@ -11,6 +15,7 @@ Every active line has six fields separated by spaces or tabs:
 &lt;device&gt; &lt;mount point&gt; &lt;type&gt; &lt;options&gt; &lt;dump&gt; &lt;pass&gt;
 
 A realistic example file:
+   ```bash
 
 \# /etc/fstab: static file system information  
 UUID=3f2a1c9e-8b7d-4c1e-9a55-1d2e3f4a5b6c / ext4 defaults 0 1  
@@ -18,7 +23,7 @@ UUID=A1B2-C3D4 /boot/efi vfat umask=0077 0 1
 UUID=9d8c7b6a-1111-2222-3333-444455556666 /data xfs defaults,nofail 0 2  
 192.168.1.10:/export/share /mnt/share nfs defaults,\_netdev 0 0  
 /swapfile none swap sw 0 0
-
+ ```
 Lines beginning with # are comments and are ignored. Blank lines are ignored too.
 
 ## 3. The six fields explained
@@ -99,44 +104,38 @@ umask=022,uid=1000,gid=1000
 ## 5. Finding the information you need
 
 Before writing any line, gather the facts.
-
+ ```bash
 lsblk -f # tree of disks, filesystems, UUIDs, mount points  
 sudo blkid # UUIDs and types of all block devices  
 findmnt # what is mounted right now  
 df -hT # usage and filesystem types
-
+ ```
 Example lsblk -f output:
-
+ ```bash
 NAME FSTYPE LABEL UUID MOUNTPOINT  
 sda  
 ├─sda1 vfat A1B2-C3D4 /boot/efi  
 └─sda2 ext4 3f2a1c9e-8b7d-4c1e-9a55-1d2e3f4a5b6c /  
 sdb  
 └─sdb1 xfs 9d8c7b6a-1111-2222-3333-444455556666
-
+ ```
 Here sdb1 has a filesystem but is not mounted, so it is a candidate for a new fstab entry.
 
 ## 6. Step-by-step: adding a new disk
 
 Suppose you added a new disk /dev/sdb, and you want it mounted on /data.
-
+ ```bash
 **Step 1: Create a partition** (skip if it already has one)
-
 sudo parted /dev/sdb --script mklabel gpt mkpart primary 0% 100%
-
 **Step 2: Create a filesystem** (this erases the partition)
-
 sudo mkfs.ext4 /dev/sdb1  
 \# or: sudo mkfs.xfs /dev/sdb1
-
+ 
 **Step 3: Create the mount point**
-
 sudo mkdir -p /data
-
 **Step 4: Back up fstab**
-
 sudo cp /etc/fstab /etc/fstab.bak.\$(date +%F)
-
+ 
 **Step 5: Get the UUID**
 
 sudo blkid /dev/sdb1
@@ -159,11 +158,11 @@ If mount -a returns no errors and df shows the disk, the entry is good.
 **Step 8: Set ownership if needed**
 
 sudo chown -R youruser:youruser /data
-
+ ```
 ## 7. More examples
 
 ### Swap file
-
+ ```bash
 sudo fallocate -l 4G /swapfile  
 sudo chmod 600 /swapfile  
 sudo mkswap /swapfile  
@@ -202,7 +201,7 @@ UUID=aaaa-bbbb /srv/uploads ext4 defaults,noexec,nosuid,nodev 0 2
 ### Bind mount (make one directory appear in another place)
 
 /srv/data/projects /home/alice/projects none bind 0 0
-
+ ```
 ## 8. Troubleshooting
 
 | Symptom                                          | Likely cause                                                                | Fix                                                                                        |
@@ -220,16 +219,15 @@ UUID=aaaa-bbbb /srv/uploads ext4 defaults,noexec,nosuid,nodev 0 2
 
 1. At the prompt, enter the root password (or press Ctrl+D to retry).
 2. Remount the root filesystem read-write:
-
+ ```bash
 mount -o remount,rw /
 
 3. Restore the backup or fix the faulty line:
 
 cp /etc/fstab.bak /etc/fstab  
 \# or: nano /etc/fstab
-
+ ```
 4. Test with mount -a, then reboot.
-
 If you cannot reach a shell at all, boot from a live USB, mount the root partition, and edit etc/fstab there.
 
 ## 9. Best practices
